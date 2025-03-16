@@ -1,0 +1,109 @@
+import React, { useEffect, useState } from "react";
+import Search from "../Search/index.jsx";
+import ProductList from "../../components/ProductList.jsx/index.jsx";
+import Loading from "../../components/Loading/index.jsx";
+
+const Products = () => {
+  const pageLimit = 5;
+  const params = new URLSearchParams(location.search);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [post, setPost] = useState([]);
+  const [page, setPage] = useState(Number(params.get("page")) || 1);
+  const [perPage, setPerPage] = useState(params.get("per_page") || 10);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(
+      `https://api01.f8team.dev/api/products?page=${page}&per_page=${perPage}`
+    )
+      .then((res) => res.json())
+      .then((datas) => {
+        setPost(datas.data);
+        setTotalPages(datas.last_page);
+      })
+      .catch((error) => console.log(error))
+      .finally(() => setIsLoading(false));
+  }, [page, perPage]);
+
+  useEffect(() => {
+    params.set("page", page);
+    history.replaceState(null, null, `?${params}`);
+  }, [page]);
+
+  useEffect(() => {
+    params.set("per_page", perPage);
+    history.replaceState(null, null, `?${params}`);
+  }, [perPage]);
+  const handleRenderPages = () => {
+    const pages = [];
+    let startPage = Math.max(1, page - Math.floor(pageLimit / 2));
+    let endPage = Math.min(totalPages, startPage + pageLimit - 1);
+
+    if (startPage > 1) {
+      pages.push(
+        <button className="page-number" key={1} onClick={() => setPage(1)}>
+          1
+        </button>
+      );
+    }
+    if (startPage > 2) {
+      pages.push(<span key="left-ellipsis">...</span>);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => setPage(i)}
+          className={`page-number ${page === i ? "active" : ""}`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pages.push(<span key="right-ellipsis">...</span>);
+      }
+      pages.push(
+        <button
+          className="page-number"
+          key={totalPages}
+          onClick={() => setPage(totalPages)}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    return pages;
+  };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  return (
+    <div className="page-container">
+      <h1 className="page-title">Danh Sách Sản Phẩm</h1>
+      <Search />
+      <ProductList
+        post={post}
+        page={page}
+        perPage={perPage}
+        handleRenderPages={handleRenderPages}
+        totalPages={totalPages}
+        setPerPage={setPerPage}
+        setPage={setPage}
+      />
+      {/* Loading nhé (xử lí trong ProductList)*/}
+      {/* <Loading setIsLoading={setIsLoading} /> */}
+      {/* Message hiển thị khi danh sách trống nhé AE */}
+    </div>
+  );
+};
+
+export default Products;

@@ -89,7 +89,7 @@ const Products = () => {
   return (
     <div className="page-container">
       <h1 className="page-title">Danh Sách Sản Phẩm</h1>
-      <Search />
+      {/* <Search /> */}
       <ProductList
         post={post}
         page={page}
